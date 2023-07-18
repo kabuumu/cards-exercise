@@ -168,5 +168,55 @@ class CardsExerciseSpec extends AnyWordSpec with Matchers {
           )) shouldBe false
       }
     }
+    "getHighestScoringHand" should {
+      "return the highest scoring hand" when {
+        "there is only a high card" in {
+          CardsExercise.getHighestScoringHand(
+            Seq(
+              Card(1, Clubs),
+              Card(3, Hearts),
+              Card(5, Diamonds),
+              Card(7, Spades),
+              Card(9, Clubs)
+            )) shouldBe HighCard(Card(9, Clubs))
+        }
+        "there is a single pair" in {
+          CardsExercise.getHighestScoringHand(
+            Seq(
+              Card(1, Clubs),
+              Card(1, Hearts),
+              Card(5, Diamonds),
+              Card(7, Spades),
+              Card(9, Clubs)
+            )) shouldBe Pair(Card(1, Clubs), Card(1, Hearts))
+        }
+        "there are two pairs" in {
+          CardsExercise.getHighestScoringHand(
+            Seq(
+              Card(1, Clubs),
+              Card(1, Hearts),
+              Card(2, Clubs),
+              Card(2, Hearts),
+              Card(9, Clubs)
+            )) shouldBe TwoPairs(
+            Pair(Card(1, Clubs), Card(1, Hearts)),
+            Pair(Card(2, Clubs), Card(2, Hearts))
+          )
+        }
+        "there is a full house" in {
+          CardsExercise.getHighestScoringHand(
+            Seq(
+              Card(1, Clubs),
+              Card(1, Hearts),
+              Card(2, Clubs),
+              Card(2, Hearts),
+              Card(2, Diamonds)
+            )) shouldBe FullHouse(
+            Pair(Card(1, Clubs), Card(1, Hearts)),
+            ThreeOfAKind(Card(2, Clubs), Card(2, Hearts), Card(2, Diamonds))
+          )
+        }
+      }
+    }
   }
 }
