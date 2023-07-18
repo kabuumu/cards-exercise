@@ -16,35 +16,24 @@ object CardsExercise {
   case class TwoPairs(pairA: Pair, pairB: Pair) extends Hand
   case class FullHouse(pair: Pair, threeOfAKind: ThreeOfAKind) extends Hand
   case class HighCard(highCard: Card) extends Hand
-
   case class Flush(cardA: Card, cardB: Card, cardC: Card, cardD: Card, cardE: Card) extends Hand
-  case class Straight(cardA: Card, cardB: Card, cardC: Card, cardD: Card, cardE: Card) extends Hand {
-    val isFlush: Boolean = Iterable(cardA, cardB, cardC, cardD, cardE).groupBy(_.suit).exists(_._2.size == 5)
-  }
+  case class Straight(cardA: Card, cardB: Card, cardC: Card, cardD: Card, cardE: Card) extends Hand
 
-  def getHighCard(hand: Seq[Card]): Card =
-    hand.maxBy(_.value)
+  def getHighCard(hand: Seq[Card]): Card = hand.maxBy(_.value)
 
-  def hasPairs(hand: Seq[Card]): Boolean = {
-    val pairs = for {
-      cardA <- hand
-      cardB <- hand
-      if cardA.value == cardB.value && cardA != cardB
-    } yield (cardA, cardB)
-
-    pairs.nonEmpty
-  }
+  def hasPairs(hand: Seq[Card]): Boolean = getGroups(hand).nonEmpty
 
   def getGroups(hand: Seq[Card]): Seq[Hand] =
     hand
       .groupBy(_.value)
+      .values
       .collect {
-        case (_, hand) if hand.size == 2 =>
-          Pair(hand.head, hand(1))
-        case (_, hand) if hand.size == 3 =>
-          ThreeOfAKind(hand.head, hand(1), hand(2))
-        case (_, hand) if hand.size == 4 =>
-          FourOfAKind(hand.head, hand(1), hand(2), hand(3))
+        case cardA :: cardB :: cardC :: cardD :: Nil =>
+          FourOfAKind(cardA, cardB, cardC, cardD)
+        case cardA :: cardB :: cardC :: Nil =>
+          ThreeOfAKind(cardA, cardB, cardC)
+        case cardA :: cardB :: Nil =>
+          Pair(cardA, cardB)
       }
       .toSeq
 
@@ -54,16 +43,16 @@ object CardsExercise {
     val threeOfAKind = groups.collectFirst { case threeOfAKind: ThreeOfAKind => threeOfAKind }
     val fourOfAKind = groups.collectFirst { case fourOfAKind: FourOfAKind    => fourOfAKind }
 
-    (pairs.headOption, pairs.lift(1), threeOfAKind, fourOfAKind) match {
-      case (Some(pairA), Some(pairB), _, _) =>
+    (pairs, threeOfAKind, fourOfAKind) match {
+      case (pairA :: pairB :: Nil, _, _) =>
         Some(TwoPairs(pairA, pairB))
-      case (Some(pair), _, Some(threeOfAKind), _) =>
+      case (pair :: Nil, Some(threeOfAKind), _) =>
         Some(FullHouse(pair, threeOfAKind))
-      case (_, _, Some(threeOfAKind: ThreeOfAKind), _) =>
+      case (_, Some(threeOfAKind: ThreeOfAKind), _) =>
         Some(threeOfAKind)
-      case (_, _, _, Some(fourOfAKind: FourOfAKind)) =>
+      case (_, _, Some(fourOfAKind: FourOfAKind)) =>
         Some(fourOfAKind)
-      case (Some(singlePair), _, _, _) =>
+      case (singlePair :: Nil, _, _) =>
         Some(singlePair)
       case _ =>
         None
@@ -81,22 +70,19 @@ object CardsExercise {
       matchingCard <- hand.find(_.value == lowestCard.value + increment)
     } yield matchingCard
 
-    if (straight.size == 4) {
-      Some(
-        Straight(
-          lowestCard,
-          straight(0),
-          straight(1),
-          straight(2),
-          straight(3)
-        ))
-    } else None
+    straight.toList match {
+      case cardA :: cardB :: cardC :: cardD :: Nil =>
+        Some(Straight(lowestCard, cardA, cardB, cardC, cardD))
+      case _ =>
+        None
+    }
   }
 
   def getFlush(hand: Seq[Card]): Option[Hand] =
-    if (hand.groupBy(_.suit).exists(_._2.size == 5))
-      Some(Flush(hand.head, hand(1), hand(1), hand(2), hand(3)))
-    else None
+    hand.groupBy(_.suit) collectFirst {
+      case (_, cardA :: cardB :: cardC :: cardD :: cardE :: Nil) =>
+        Flush(cardA, cardB, cardC, cardD, cardE)
+    }
 
   def getHighestScoringHand(hand: Seq[Card]): Hand = {
     val optStraight = getStraight(hand)
@@ -105,7 +91,7 @@ object CardsExercise {
     val highCard = HighCard(getHighCard(hand))
 
     (optStraight ++ optGroup ++ optFlush ++ Some(highCard)).maxBy {
-      case straight: Straight if straight.isFlush =>
+      case _: Straight if optFlush.isDefined =>
         8
       case _: FourOfAKind =>
         7
