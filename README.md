@@ -9,7 +9,6 @@ Write a method which takes in a hand of five cards and returns whether there are
 
 ## Task 3:
 Write a method which determines how many pairs, three-of-a-kinds or four-of-a-kinds there are in a hand (two, three or four cards with the same numerical value).
-If there is a three or four of a kind, only return the highest combination.
 
 ## Task 4:
 Write a method which determines if a hand contains a straight (five cards in sequential numerical value – e.g. 1, 2, 3, 4, 5)
@@ -25,4 +24,3 @@ Write a method which takes a hand of five cards and returns the highest scoring 
 * Three of a kind – three cards of the same numerical value
 * Two pairs – two pairs of cards
 * Pair – two cards of the same numerical value
-
